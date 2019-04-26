@@ -31,8 +31,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  *
  */
-#include <stdio.h>
-#include <stdlib.h>
+
 #include <iostream>
 #include <fstream>
 #include <CCfits/CCfits>

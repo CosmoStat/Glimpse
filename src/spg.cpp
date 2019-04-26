@@ -53,8 +53,8 @@ spg::spg ( int npix, int nz, int nframes, const double *P, const float *l1_weigh
     d_w     = ( float ** ) malloc ( sizeof ( float * ) * nGPU );
 
     // Stride between coefficients processed by different GPUs
-    coeff_stride = ( ulong * ) malloc ( sizeof ( ulong ) * nGPU );
-    coeff_stride_pos = ( ulong * ) malloc ( sizeof ( ulong ) * nGPU );
+    coeff_stride = ( unsigned long * ) malloc ( sizeof ( unsigned long ) * nGPU );
+    coeff_stride_pos = ( unsigned long * ) malloc ( sizeof ( unsigned long ) * nGPU );
 
     // Memory allocation for all GPUs
     for ( int i = 0; i < nGPU; i++ ) {

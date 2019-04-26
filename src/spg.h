@@ -48,8 +48,8 @@ class spg
     int whichGPUs[MAX_GPUS];
     
     // Stride between coefficients proccessed by different GPUs
-    ulong * coeff_stride;
-    ulong * coeff_stride_pos;
+    unsigned long * coeff_stride;
+    unsigned long * coeff_stride_pos;
         
     // Device pointer arrays, storing  pointers for each device
     float ** d_x;
