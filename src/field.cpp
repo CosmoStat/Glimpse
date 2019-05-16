@@ -94,7 +94,7 @@ field::field(boost::property_tree::ptree config, survey *su)
             zlp_up[i]  = zlp_min + (zlp_max - zlp_min) * ((double)(i + 1.0)) / ((double) nlp);
         }
     }
-    
+
     r_cond = config.get<double>("field.r_cond", 0.1);
 
     // Here we increase the size of the field to avoid border effects
@@ -172,7 +172,7 @@ field::field(boost::property_tree::ptree config, survey *su)
     // Initialize the lensing planes, with one nfft per plane
     ps = (nfft_plan **) malloc((nlp) * sizeof(nfft_plan *));
     fft_frame = fftwf_alloc_complex(npix * npix * nlp);
-    
+
     // Normalization factor for the fft
     fftFactor =1.0/(((double)npix)*npix);
 
@@ -212,6 +212,7 @@ field::field(boost::property_tree::ptree config, survey *su)
          // If the lens redshift wasn't provided, use unit weights
         if(zlens <= 0){
             for(long ind =0; ind < ngal*nlp; ind++){lensKernel[ind] = 1. ;}
+            for(long ind =0; ind < ngal*nlp; ind++){lensKernelTrue[ind] = 1. ;}
         }else{
             // In the 2D case, the lensing kernel is just a lensing weight based on the
             // critical surface mass density.
@@ -289,19 +290,19 @@ void field::get_pixel_coordinates(double* ra, double* dec)
 {
     for(int i=0; i < npix; i++){
         double x = (i + 0.5) * pixel_size - size/2.;
-        
+
         for(int j=0; j < npix; j++){
             double y = (j + 0.5) * pixel_size - size/2.;
 
             double z = sqrt(x*x + y*y);
             double c = atan(z);
-            
+
             double delta = asin(cos(c) * sin(surv->get_center_dec()) + y / z * sin(c) * cos(surv->get_center_dec()));
-            
+
             double denom = z * cos(surv->get_center_dec()) * cos(c) - y * sin(surv->get_center_dec()) * sin(c);
-            
+
             double alpha = surv->get_center_ra() + atan2(x * sin(c), denom);
-            
+
             ra[j * npix +  i] = alpha / ( M_PI / 180.0 );
             dec[j * npix + i] = delta / ( M_PI / 180.0 );
         }
@@ -416,7 +417,7 @@ void field::forward_operator(fftwf_complex *delta)
                     int kx  = (x < npix / 2 ? x + npix / 2 : x - npix / 2);
 
                     long pos = ky * npix + kx + z * (npix * npix);
-                    
+
                     ps[z]->f_hat[y * npix + x][0] = deltaFlex[pos][0];
                     ps[z]->f_hat[y * npix + x][1] = deltaFlex[pos][1];
                 }
@@ -570,16 +571,16 @@ void field::combine_components(fftwf_complex *delta, fftwf_complex *delta_comb)
 
         // Computes the convergence at the position of the
         for (int y = 0; y < npix ; y++) {
-            
+
             k2 = (y - npix / 2) * freqFactor;
             int ky  = (y < npix / 2 ? y + npix / 2 : y - npix / 2);
-            
+
             for (int x = 0; x < npix ; x++) {
                 k1 = (x - npix / 2) * freqFactor;
                 int kx  = (x < npix / 2 ? x + npix / 2 : x - npix / 2);
-                    
+
                 long pos = ky * npix + kx + z * (npix * npix);
-                
+
                 ksqr = k1 * k1 + k2 * k2;
 
                 denom = 1.0 / (ksqr + sig_frac);
@@ -613,12 +614,12 @@ void field::combine_components_inverse(fftwf_complex *delta_comb, fftwf_complex 
         for (int y = 0; y < npix ; y++) {
             k2 = (y - npix / 2) * freqFactor;
             int ky  = (y < npix / 2 ? y + npix / 2 : y - npix / 2);
-            
+
             for (int x = 0; x < npix ; x++) {
                 k1 = (x - npix / 2) * freqFactor;
                 int kx  = (x < npix / 2 ? x + npix / 2 : x - npix / 2);
                 long pos = ky * npix + kx + z * (npix * npix);
-                
+
                 if (include_flexion) {
                     deltaFlex[pos][0] = (delta_comb[pos][0] * k2 + delta_comb[pos][1] * k1);
                     deltaFlex[pos][1] = (-delta_comb[pos][0] * k1 + delta_comb[pos][1] * k2);
@@ -655,7 +656,7 @@ bool field::check_adjoint()
         double result_backward2 = 0;
 
         forward_operator(delta1);
-        
+
         for (long ind = 0; ind < ngal ; ind++) {
             test_g1[ind] = res_gamma1[ind];
             test_g2[ind] = res_gamma2[ind];
@@ -682,7 +683,7 @@ bool field::check_adjoint()
     }else{
         fftwf_complex *delta1 = fftwf_alloc_complex( npix * npix * nlp);
         fftwf_complex *delta2 = fftwf_alloc_complex( npix * npix * nlp);
-        
+
         double *test_g1 = (double *) malloc(sizeof(double) * ngal);
         double *test_g2 = (double *) malloc(sizeof(double) * ngal);
 
@@ -697,14 +698,14 @@ bool field::check_adjoint()
         double result_backward2 = 0;
 
         forward_operator(delta1);
-        
+
         for (long ind = 0; ind < ngal ; ind++) {
             test_g1[ind] = res_gamma1[ind];
             test_g2[ind] = res_gamma2[ind];
             res_gamma1[ind] = gsl_ran_gaussian(rng, 1.0);
             res_gamma2[ind] = gsl_ran_gaussian(rng, 1.0);
         }
-        
+
         adjoint_operator(delta2);
 
         for (long ind = 0; ind < npix * npix * nlp ; ind++) {
@@ -717,7 +718,7 @@ bool field::check_adjoint()
             result_backward2 += res_gamma2[ind] * test_g1[ind] - res_gamma1[ind] * test_g2[ind];
         }
         std::cout << " Results  of check: " << result_forward << " against " << result_backward  << std::endl;
-        std::cout << " Results  of check: " << result_forward2 << " against " << result_backward2  << std::endl;            
+        std::cout << " Results  of check: " << result_forward2 << " against " << result_backward2  << std::endl;
     }
     return true;
 }
@@ -730,19 +731,19 @@ typedef struct {
 
 #define EPS_GW_INT 1.0E-14
 double int_for_3d_efficiency ( double aprime, void* intpar) {
-    
+
     double wprime, fKwp, fKw, fKwwp, dwda;
-    
+
     int_for_3d_efficiency_params *params = (int_for_3d_efficiency_params *) intpar ;
     nicaea::cosmo *self                  = params->model;
     nicaea::error **err                  = params->err;
     double w                             = params->w_a;
-    
+
     double fac = 1.5/nicaea::dsqr ( R_HUBBLE ) * ( self->Omega_m+ self->Omega_nu_mass ) /aprime;
 
     wprime = nicaea::w ( self, aprime, 0, err );
     quitOnError ( *err, __LINE__, stderr );
-    
+
     if( wprime >= w ) return 0;
 
     fKwp   = nicaea::f_K ( self, wprime, err );
@@ -773,7 +774,7 @@ typedef struct {
     gsl_interp_accel *accelerator;
 } int_for_marginalisation_params;
 
-double int_for_marginalisation(double  z, void *intpar){    
+double int_for_marginalisation(double  z, void *intpar){
     int_for_marginalisation_params *p = (int_for_marginalisation_params *) intpar;
 
     return p->redshift->pdf(z) * gsl_interp_eval(p->interpolator, p->x, p->y, z, p->accelerator);
@@ -787,48 +788,48 @@ void field::compute_3D_lensing_kernel()
     gsl_integration_workspace **w;
     double *x;
     double **y;
-    
+
     // First step, compute the lensing efficiency kernel on an interpolation table
     // to speed up the computation
     int nzsamp = ZMAX*100;
     x = (double *) malloc(sizeof(double) * nzsamp);
     y = (double **) malloc(sizeof(double*) * nlp);
     w = (gsl_integration_workspace **) malloc(sizeof(gsl_integration_workspace *) * nlp);
-    
+
     for(int z=0; z < nlp; z++){
         y[z] = (double *) malloc(sizeof(double) * nzsamp);
 	w[z] = gsl_integration_workspace_alloc(2048);
     }
-    
+
     // Initialize the x array of redshift sampling of the lensing efficiency kernel
     for(int i=0; i < nzsamp; i++){
         x[i] = ZMAX/((double) (nzsamp - 1) )*i;
     }
-    
+
     int_for_3d_efficiency_params intpar;
     intpar.model = model;
     intpar.err   = err;
-    
+
     gsl_function F;
     F.function = &int_for_3d_efficiency;
-    
+
     for(int i=0; i < nzsamp; i++){
-        double a   = 1.0/(1.0 + x[i]); 
+        double a   = 1.0/(1.0 + x[i]);
         intpar.w_a = nicaea::w ( model, a, 0, err ); quitOnError ( *err, __LINE__, stderr );
-          
+
         F.params = (void *) &intpar;
 	#pragma omp parallel for
         for (int z=0; z < nlp; z++){
-	  
+
 	    double result;
 	    double abserr;
             gsl_integration_qags(&F, 1.0/(zlp_up[z] + 1), 1.0/(zlp_low[z] + 1),
-                                            0, 1.0e-5, 2048, w[z], &result, &abserr); 
+                                            0, 1.0e-5, 2048, w[z], &result, &abserr);
             y[z][i] = result;
         }
     }
 
-    // Interpolation table for each z and integrate over p(zsamp) for each galaxy 
+    // Interpolation table for each z and integrate over p(zsamp) for each galaxy
     interpolators = (gsl_interp **) malloc(sizeof(gsl_interp *)*nlp);
     accelerators  = (gsl_interp_accel **) malloc(sizeof(gsl_interp_accel *)*nlp);
     for(int z=0; z < nlp; z++){
@@ -836,21 +837,21 @@ void field::compute_3D_lensing_kernel()
         accelerators[z]  = gsl_interp_accel_alloc();
         gsl_interp_init(interpolators[z], x, y[z], nzsamp);
     }
-    
+
     // Deactivate default gsl error handling
     gsl_error_handler_t * handler =  gsl_set_error_handler_off();
-    
+
     // Compute lensing efficiency kernel for each galaxy by marginalising over pdf
     for (int i = 0; i < ngal; i++) {
         if(i % 100 == 0) std::cout  << "Processed " << i << "/" << ngal << " galaxies\r" << std::flush;
         redshift_distribution * redshift=surv->get_redshift(i);
-        
-        
+
+
 	#pragma omp parallel for
         for(int z=0; z <nlp; z++){
 	    double result;
 	    double abserr;
-        
+
 	    int_for_marginalisation_params params;
 	    params.x = x;
 	    gsl_function G;
@@ -873,7 +874,7 @@ void field::compute_3D_lensing_kernel()
                     double a = std::max(0., redshift->get_zmin());
                     double b = std::min(ZMAX, redshift->get_zmax());
                     long n = 1024;
-                    
+
                     double h = (b - a)/((double) n);
                     result = 0;
                     for(long it=0; it < (n - 1); it++){
@@ -887,19 +888,19 @@ void field::compute_3D_lensing_kernel()
             lensKernel[i * nlp + z] = std::max(result, 0.);
 
         }
-        
+
     }
-    
+
     // Reset default gsl error handling
     gsl_set_error_handler(NULL);
     std::cout  << "Processed " << ngal << "/" << ngal << " galaxies" << std::endl;
-    
+
 #ifdef DEBUG_FITS
     dblarray toto;
     toto.alloc(lensKernel, nlp, ngal, 1);
     fits_write_dblarr("lensKernel.fits",toto);
-#endif    
-    
+#endif
+
     // Free all unnecessary arrays
     for(int z=0; z < nlp; z++){
         gsl_interp_free(interpolators[z]);
@@ -910,7 +911,7 @@ void field::compute_3D_lensing_kernel()
     free(x);
     free(y);
     free(w);
-    
+
     // Apply SVD regularisation to the lensing operator
     int nsmall = std::min( ngal, 20000l );
     arma::mat A ( ngal, nlp );
@@ -918,12 +919,12 @@ void field::compute_3D_lensing_kernel()
     arma::mat U;
     arma::vec s;
     arma::mat V;
-    
+
     // Select random indices out of the entire survey to compute Asmall
     std::vector<int> indices;
     for (int i=0; i<ngal; ++i) indices.push_back(i);
     std::random_shuffle(indices.begin(), indices.end());
-    
+
     for ( long int ind =0; ind < ngal; ind++ )
         for ( int z=0; z < nlp; z++ ) {
             if ( ind < nsmall )   Asmall (ind, z ) = lensKernel[indices[ind]*nlp + z];
@@ -975,23 +976,23 @@ void field::compute_3D_lensing_kernel()
             PP[z2*nlp + z1] = PPr(z1,z2);
         }
     }
-    
+
 #ifdef DEBUG_FITS
     dblarray top;
     top.alloc(P,nlp,nlp,1);
-    
+
     dblarray toip;
     toip.alloc(iP,nlp,nlp,1);
-    
+
     dblarray topp;
     topp.alloc(PP,nlp,nlp,1);
-    
+
     fits_write_dblarr("P.fits", top);
     fits_write_dblarr("IP.fits", toip);
     fits_write_dblarr("PP.fits", topp);
     fits_write_dblarr("QP.fits", toto);
 #endif
-    
+
 }
 
 typedef struct {
@@ -1116,7 +1117,7 @@ double field::get_spectral_norm(int niter, double tol) {
         // Apply adjoint operator on normalized results
         adjoint_operator(kap_tmp);
         combine_components_inverse(kap_tmp,kap);
-        
+
 
         // Compute norm
         norm= 0;
@@ -1183,7 +1184,7 @@ void field::update_covariance(fftwf_complex* delta)
             res_conv[i] += q * ps[z]->f[i][0] * fftFactor;
         }
     }
-    
+
     for(int i=0; i < ngal ; i++) {
         double factor = std::max(1.0 -  res_conv[i],0.3);
         cov[i] = 1.0/(factor*factor);
