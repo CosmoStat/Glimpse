@@ -1,6 +1,22 @@
 # Enable C++ support
 language: cpp
 
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      name: linux
+    - os: osx
+      osx_image: xcode11.3
+      name: OSX
+
+addons:
+  apt:
+    packages: cmake libgsl0-dev libfftw3-3  libccfits-dev libnfft3-dev libarmadillo-dev libboost-all-dev
+  homebrew:
+    taps: brewsci/science
+    packages: nfft gsl fftw ccfits armadillo boost
+
 cache:
     directories:
       - /home/travis/build/CosmoStat/Glimpse/build/SPARSE2D
@@ -11,11 +27,6 @@ compiler:
     - gcc
 
 sudo: required
-
-before_install:
-    - sudo apt-get update -qq
-    - sudo apt-get install -qq cmake libgsl0-dev libfftw3-3  libccfits-dev libnfft3-dev libarmadillo-dev libboost-all-dev
-#- sudo apt-get install -qq nvidia-cuda-dev
 
 install: true
 
