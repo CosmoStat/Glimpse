@@ -23,7 +23,6 @@ addons:
   homebrew:
     taps: brewsci/science
     packages:
-      - gcc
       - cmake
       - nfft
       - gsl
@@ -42,20 +41,18 @@ compiler:
     - gcc
 
 sudo: required
-
-before_install:
-  - |
-    if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
-      eval "CC=gcc-9 && CXX=g++-9"
-    fi
-
+#
+# before_install:
+#   - |
+#     if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
+#       eval "CC=gcc-9 && CXX=g++-9"
+#     fi
 
 install: true
 
 # Build steps
 script:
     - mkdir -p build && cd build
-    - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then cmake -DCMAKE_CXX_FLAGS="-DMACOS" ..; fi
-    - if [[ ${TRAVIS_OS_NAME} != "osx" ]]; then cmake ..; fi
+    - cmake ..
     - make
     - ./glimpse --version
