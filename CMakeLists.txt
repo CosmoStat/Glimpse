@@ -50,7 +50,7 @@ ExternalProject_Add(NICAEA
 ExternalProject_Add(SPARSE2D
          PREFIX SPARSE2D
          GIT_REPOSITORY ${SPARSE2D_URL}
-         GIT_TAG v2.1.0
+         GIT_TAG v2.1.4
          CMAKE_ARGS     -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/extern)
         set(SPARSE2D_LIBRARY_DIR ${CMAKE_BINARY_DIR}/extern/lib)
         set(SPARSE2D_INCLUDE_DIR ${CMAKE_BINARY_DIR}/extern/include)
@@ -99,8 +99,17 @@ configure_file(
 find_package(CUDA)
 
 set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}  -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fpermissive -fopenmp -std=c++11")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -fpermissive -fopenmp -std=c++11 -DDEBUG_FITS")
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+  find_package(OpenMP REQUIRED)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fpermissive -DMACOS -Xpreprocessor -fopenmp -lomp")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -fpermissive -DMACOS -DDEBUG_FITS -Xpreprocessor -fopenmp -lomp")
+  get_filename_component(OpenMP_CXX_LIBRARY_DIR ${OpenMP_CXX_LIBRARIES} DIRECTORY)
+  link_directories(${OpenMP_CXX_LIBRARY_DIR})
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fpermissive -fopenmp -std=c++11")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -fpermissive -fopenmp -std=c++11 -DDEBUG_FITS")
+endif()
 
 if(${CUDA_FOUND})
     message("Compiling CUDA accelerated reconstruction code, with 3D support")
