@@ -55,6 +55,7 @@ install: true
 # Build steps
 script:
     - mkdir -p build && cd build
-    - cmake ..
+    - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then cmake -DCMAKE_CXX_FLAGS="-DMACOS" ..; fi
+    - if [[ ${TRAVIS_OS_NAME} != "osx" ]]; then cmake ..; fi
     - make
     - ./glimpse --version
