@@ -28,12 +28,13 @@ These dependencies can easily be installed using a package manager:
   ```
     $ sudo apt-get install cmake libgsl0-dev libfftw3-3  libccfits-dev libnfft3-dev libarmadillo-dev libboost-all-dev
   ```
-* Setting up requirements on **MacOs X**:
-  The preferred installation method for the dependencies is through [MacPorts](https://www.macports.org):
+* Setting up requirements on **MacOS X**:
+  The preferred installation method for the dependencies is through [Homebrew](https://brew.sh/):
   ```  
-    $ sudo port install cmake libgsl0-dev pkgconfig gsl fftw-3 nfft-3
+    $ brew tap brewsci/science
+    $ brew install libomp cmake nfft gsl fftw ccfits armadillo boost
   ```
-  CCFits needs to be installed manually, the sources can be found [here](http://heasarc.gsfc.nasa.gov/fitsio/ccfits/).
+  Note that when using `brew` to install dependencies, compiling with `gcc` is **not supported**, please use the default AppleClang instead.  
 
 ### Compilation
 
