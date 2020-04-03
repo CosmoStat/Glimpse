@@ -102,15 +102,14 @@ set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}  -O3")
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
   find_package(OpenMP REQUIRED)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fpermissive -DMACOS ${OpenMP_CXX_FLAGS}")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -fpermissive -DMACOS -DDEBUG_FITS ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fpermissive -DMACOS -Xpreprocessor ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -fpermissive -DMACOS -DDEBUG_FITS -Xpreprocessor ${OpenMP_CXX_FLAGS}")
+  message(${OpenMP_CXX_FLAGS})
   include_directories(${OpenMP_INCLUDE_PATH})
   link_directories(${OpenMP_LIB_PATH})
-  set(OMP_LIBRARIES -lomp)
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fpermissive -fopenmp -std=c++11")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -fpermissive -fopenmp -std=c++11 -DDEBUG_FITS")
-  set(OMP_LIBRARIES -lomp)
 endif()
 
 if(${CUDA_FOUND})
@@ -138,5 +137,4 @@ target_link_libraries(glimpse ${NICAEA_LIBRARIES}
                               ${FFTW_LIBRARIES}
                               ${CCFITS_LIBRARY}
                               ${CFITSIO_LIBRARY}
-                              ${ARMADILLO_LIBRARIES}
-                              ${OMP_LIBRARIES})
+                              ${ARMADILLO_LIBRARIES})
