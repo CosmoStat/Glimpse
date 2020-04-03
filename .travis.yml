@@ -12,10 +12,24 @@ matrix:
 
 addons:
   apt:
-    packages: cmake libgsl0-dev libfftw3-3  libccfits-dev libnfft3-dev libarmadillo-dev libboost-all-dev
+    packages:
+      - cmake
+      - libgsl0-dev
+      - libfftw3-3
+      - libccfits-dev
+      - libnfft3-dev
+      - libarmadillo-dev
+      - libboost-all-dev
   homebrew:
     taps: brewsci/science
-    packages: nfft gsl fftw ccfits armadillo boost
+    packages:
+      - cmake
+      - nfft
+      - gsl
+      - fftw
+      - ccfits
+      - armadillo
+      - boost
 
 cache:
     directories:
