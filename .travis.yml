@@ -23,6 +23,7 @@ addons:
   homebrew:
     taps: brewsci/science
     packages:
+      - libomp
       - cmake
       - nfft
       - gsl
